@@ -16,7 +16,7 @@ options = {
     'py2exe': {
         'bundle_files': 1,  # Bundle everything into a single file
         'compressed': True, # Compress the library archive
-        'includes': ['sip', 'PyQt5.QtWidgets', 'cv2'], # Include these modules
+        'includes': ['PyQt5.QtWidgets', 'cv2'], # Include these modules
     }
 }
 
