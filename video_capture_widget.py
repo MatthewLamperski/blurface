@@ -4,12 +4,13 @@ import tempfile
 
 import cv2
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QPushButton, QComboBox, QFileDialog, QHBoxLayout
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtGui import QImage, QPixmap, QGuiApplication
 from PyQt5.QtCore import QTimer, Qt, QSize, QEvent
 
 
 class VideoCaptureWidget(QWidget):
     def __init__(self):
+        QGuiApplication().setAttribute(Qt.AA_DisableHighDpiScaling)
         super().__init__()
 
         self.video_capture = cv2.VideoCapture(0)
