@@ -1,17 +1,48 @@
 import os
 import sys
 import tempfile
-
+import time
 import cv2
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QPushButton, QComboBox, QFileDialog, QHBoxLayout
 from PyQt5.QtGui import QImage, QPixmap, QGuiApplication
 from PyQt5.QtCore import QTimer, Qt, QSize, QEvent
 
+class AutoFontComboBox(QComboBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.adjustFontSize()
+
+    def adjustFontSize(self):
+        # Calculate an appropriate font size based on the combo box's height
+        font_size = max(8, self.height() // 16)  # Example calculation
+        font = self.font()
+        font.setPointSize(font_size)
+        self.setFont(font)
+
+class AutoFontButton(QPushButton):
+    def __init__(self, text, parent=None):
+        super().__init__(text, parent)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.adjustFontSize()
+
+    def adjustFontSize(self):
+        # Calculate an appropriate font size based on the button's height
+        font_size = max(8, self.height() // 16)  # Example calculation
+        font = self.font()
+        font.setPointSize(font_size)
+        self.setFont(font)
+
 
 class VideoCaptureWidget(QWidget):
     def __init__(self):
-        QGuiApplication().setAttribute(Qt.AA_DisableHighDpiScaling)
         super().__init__()
+
+        self.setWindowTitle("BlurFace")
 
         self.video_capture = cv2.VideoCapture(0)
         # Obtain the original size of the video feed
@@ -41,14 +72,14 @@ class VideoCaptureWidget(QWidget):
         self.image_label = QLabel()
         self.image_label.setAlignment(Qt.AlignCenter)
 
-        self.webcam_selector = QComboBox(self)
+        self.webcam_selector = AutoFontComboBox(self)
         self.enumerate_webcams()
         self.webcam_selector.currentIndexChanged.connect(self.select_webcam)
 
-        self.record_button = QPushButton("Record", self)
+        self.record_button = AutoFontButton("Record", self)
         self.record_button.clicked.connect(self.toggle_recording)
 
-        self.blur_button = QPushButton("Toggle Blur", self)
+        self.blur_button = AutoFontButton("Toggle Blur", self)
         self.blur_button.clicked.connect(self.toggle_blur)
 
         control_layout = QHBoxLayout()
@@ -77,10 +108,25 @@ class VideoCaptureWidget(QWidget):
             index += 1
 
     def select_webcam(self, index):
-        print(f"Index: {index}")
-        if self.video_capture.isOpened():
+        # Release the current capture object
+        if self.video_capture is not None:
             self.video_capture.release()
-        self.video_writer = cv2.VideoCapture(index - 1, cv2.CAP_DSHOW)
+            time.sleep(0.5)  # Short delay to allow camera release
+
+        # Attempt to initialize the new camera
+        attempts = 5
+        while attempts > 0:
+            self.video_capture = cv2.VideoCapture(index)
+            if self.video_capture.isOpened():
+                ret, _ = self.video_capture.read()
+                if ret:
+                    break  # Camera initialized and frame read successfully
+            time.sleep(1)  # Wait a bit before retrying
+            attempts -= 1
+
+        if attempts == 0:
+            print("Failed to activate new camera.")
+            # Handle the failure (e.g., revert to a default camera or show an error message)
 
     def toggle_recording(self):
         if self.record:
@@ -193,6 +239,7 @@ class VideoCaptureWidget(QWidget):
 
     def closeEvent(self, event):
         self.video_capture.release()
+
 
 app = QApplication(sys.argv)
 main_window = VideoCaptureWidget()
