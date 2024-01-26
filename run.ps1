@@ -12,7 +12,7 @@ $python = Get-Command python -ErrorAction SilentlyContinue
 if (-not $python) {
 
     # Specify the Python version to download
-    $pythonVersion = "3.10.0"
+    $pythonVersion = "3.9.6"
     $pythonInstaller = "python-$pythonVersion-amd64.exe"
     $pythonDownloadUrl = "https://www.python.org/ftp/python/$pythonVersion/$pythonInstaller"
 
@@ -29,10 +29,9 @@ $envName = "venv"
 python -m venv $envName
 
 $venvScript = ".\$envName\Scripts\Activate.ps1"
-. $venvScript
+PowerShell -ExecutionPolicy Bypass -File $venvScript
 
 pip install -r requirements.txt
 
 $scriptName = "video_capture_widget.py"
-
-deactivate
+python $scriptName
